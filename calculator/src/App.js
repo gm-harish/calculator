@@ -54,7 +54,7 @@ class App extends React.Component {
         }));
       } catch (e) {
         console.log(e);
-        alert('please enter proper values Math Error');
+        alert('please enter proper values');
       }
     } else {
       alert('please enter both values of operator');
