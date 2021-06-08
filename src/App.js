@@ -200,17 +200,13 @@ class App extends React.Component {
               this.onInputText(e.target.value);
             }}
           ></input>
-          <p
+          <div
             id="error"
-            style={
-              this.state.errorMsg
-                ? {visibility: 'visible'}
-                : {visibility: 'hidden'}
-            }
+            style={this.state.errorMsg ? {opacity: 1} : {opacity: 0}}
             className="error_form"
           >
             {this.state.errorMsg}
-          </p>
+          </div>
           <table className="table">
             <tbody>
               {rows.map((row, index) => (
