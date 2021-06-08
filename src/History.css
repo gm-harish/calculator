@@ -1,0 +1,14 @@
+p {
+  color: rgb(197, 186, 186);
+}
+
+.ulContainer {
+  width: 150px;
+  height: 500px;
+  overflow: auto;
+  margin: auto;
+}
+.title {
+  color: blueviolet;
+  margin: auto;
+}

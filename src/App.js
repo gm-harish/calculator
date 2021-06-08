@@ -1,16 +1,15 @@
 import React from 'react';
 import './App.css';
-import {evaluate} from 'mathjs';
+import {evaluate, format} from 'mathjs';
+import History from './History';
 
 const rows = [
-  ['1', '2', '3'],
-  ['4', '5', '6'],
-  ['7', '8', '9'],
-  ['.', '0', '='],
-  ['+', '-', '*'],
-  ['sin', 'cos', '/'],
-  ['ce', 'c', 'undo'],
-  ['(', ')', 'tan'],
+  ['sin', 'cos', 'tan', 'c'],
+  ['1', '2', '3', '*'],
+  ['4', '5', '6', '-'],
+  ['7', '8', '9', '+'],
+  ['.', '0', '=', '/'],
+  ['ce', '(', ')', 'undo'],
 ];
 //tan, brackets
 
@@ -26,6 +25,19 @@ function validate(text) {
   }
 }
 
+function validateBrackets(s) {
+  let temp = 0;
+  for (let i = 0; i < s.length; i++) {
+    if (s.charAt(i) === '(') {
+      temp++;
+    } else if (s.charAt(i) === ')') {
+      temp--;
+    }
+  }
+
+  return temp === 0 ? true : false;
+}
+
 class App extends React.Component {
   constructor(props) {
     super();
@@ -33,6 +45,9 @@ class App extends React.Component {
       input: '0',
       result: '0',
       resultHist: [],
+      isValueEnabled: false,
+      errorMsg: '',
+      resultHistIndex: -1,
     };
     this.onKeyPadPress = this.onKeyPadPress.bind(this);
     this.doOperation = this.doOperation.bind(this);
@@ -41,24 +56,51 @@ class App extends React.Component {
     this.onUndoPress = this.onUndoPress.bind(this);
   }
 
+  validateInput() {
+    this.setState({errorMsg: ''});
+    if (!validateBrackets(this.state.input)) {
+      this.setState({
+        result: 'Math Err',
+        isValueEnabled: true,
+        errorMsg: 'please check brackets',
+      });
+    } else if (!validate(this.state.input)) {
+      console.log('123');
+      this.setState({
+        result: 'Math Err',
+        isValueEnabled: true,
+        errorMsg: 'please enter both values of operator',
+      });
+    } else {
+      this.calculateResult();
+    }
+  }
+
   calculateResult() {
-    if (validate(this.state.input)) {
-      try {
-        const result = evaluate(this.state.input);
-        console.log(result);
+    try {
+      const result = evaluate(this.state.input);
+      if (typeof result === 'number') {
         this.setState({
-          result,
+          result: format(result, 8),
+          isValueEnabled: true,
         });
         this.setState((prevState) => ({
-          resultHist: prevState.resultHist.concat(prevState.input),
+          resultHist: prevState.resultHist.concat({
+            input: prevState.input,
+            result: prevState.result,
+          }),
+          resultHistIndex: prevState.resultHistIndex + 1,
         }));
-      } catch (e) {
-        console.log(e);
-        alert('please enter proper values');
+      } else {
+        throw Error('unkown maths');
       }
-    } else {
-      alert('please enter both values of operator');
-      this.setState({result: 'Math Err'});
+    } catch (e) {
+      console.log(e);
+      this.setState({
+        result: 'Math Err',
+        isValueEnabled: true,
+        errorMsg: 'please enter proper values',
+      });
     }
   }
 
@@ -77,10 +119,13 @@ class App extends React.Component {
 
   OnTrigValues(text) {
     if (this.state.input !== '0') {
-      console.log(text);
       this.setState((prevState) => ({
-        input: text + '(' + prevState.input + ')',
+        input: prevState.input + text + '(',
       }));
+    } else {
+      this.setState({
+        input: text + '(',
+      });
     }
   }
 
@@ -89,14 +134,18 @@ class App extends React.Component {
   }
 
   onUndoPress() {
-    const lastExp = this.state.resultHist[this.state.resultHist.length - 1];
-    if (lastExp) {
-      this.setState({input: lastExp, result: '0'});
-      this.setState({resultHist: this.state.resultHist.slice(0, -1)});
+    if (this.state.resultHistIndex > -1) {
+      const lastExp = this.state.resultHist[this.state.resultHistIndex];
+      this.setState({input: lastExp.input, result: '0'});
+      this.setState((prevState) => ({
+        resultHistIndex: prevState.resultHistIndex - 1,
+      }));
     }
   }
 
   doOperation(operator) {
+    this.setState({isValueEnabled: false, errorMsg: ' '});
+
     switch (operator) {
       case 'c':
         this.setState((prevState) => ({
@@ -107,7 +156,7 @@ class App extends React.Component {
         this.setState({input: '0'});
         break;
       case '=':
-        this.calculateResult();
+        this.validateInput();
         break;
       case 'sin':
       case 'cos':
@@ -125,68 +174,95 @@ class App extends React.Component {
 
   render() {
     return (
-      <table className="table">
-        <tbody>
-          <tr>
-            <th colSpan="3">
-              <input
-                data-testid="input"
-                type="text"
-                value={this.state.input}
-                onKeyDown={(e) => {
-                  if (e.keyCode === 13) {
-                    this.calculateResult();
-                  }
-                }}
-                onChange={(e) => {
-                  this.onInputText(e.target.value);
-                }}
-              ></input>
-            </th>
-          </tr>
-          <tr>
-            <th colSpan="3">
-              <input
-                data-testid="result"
-                readOnly
-                type="text"
-                value={this.state.result}
-              ></input>
-            </th>
-          </tr>
-          {rows.map((row, index) => (
-            <tr key={index}>
-              {row.map((el, i) => (
-                <td key={i}>
+      <div className="AppContainer">
+        <form className="formContainer" name="calculator">
+          <div
+            style={this.state.isValueEnabled ? {opacity: 1} : {opacity: 0}}
+            className="valueContainer"
+          >
+            {this.state.result}
+          </div>
+          <input
+            data-testid="input"
+            type="text"
+            className="inputContainer"
+            autoFocus
+            value={this.state.input}
+            onKeyDown={(e) => {
+              if (e.keyCode === 13) {
+                e.preventDefault();
+                this.validateInput();
+              }
+            }}
+            onChange={(e) => {
+              this.setState({isValueEnabled: false});
+              this.onInputText(e.target.value);
+            }}
+          ></input>
+          <p
+            style={
+              this.state.errorMsg
+                ? {visibility: 'visible'}
+                : {visibility: 'hidden'}
+            }
+            className="error_form"
+          >
+            {this.state.errorMsg}
+          </p>
+          <table className="table">
+            <tbody>
+              {/* <tr>
+              <th colSpan="4"></th>
+            </tr> */}
+              {rows.map((row, index) => (
+                <tr key={index}>
+                  {row.map((el, i) => (
+                    <td key={i}>
+                      <button
+                        data-testid={'button' + el}
+                        className="button"
+                        type="button"
+                        onClick={() => this.doOperation(el)}
+                      >
+                        {el}
+                      </button>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              <tr>
+                <td colSpan="1">
                   <button
-                    data-testid={'button' + el}
-                    className="button"
+                    data-testid="copyButton"
                     type="button"
-                    onClick={() => this.doOperation(el)}
+                    className="button"
+                    style={{width: '100%'}}
+                    onClick={() => {
+                      this.doOperation('deg');
+                    }}
                   >
-                    {el}
+                    deg
                   </button>
                 </td>
-              ))}
-            </tr>
-          ))}
-          <tr>
-            <th colSpan="3">
-              <button
-                data-testid="copyButton"
-                type="button"
-                className="button"
-                style={{width: '100%'}}
-                onClick={() => {
-                  navigator.clipboard.writeText(this.state.result);
-                }}
-              >
-                Copy Result
-              </button>
-            </th>
-          </tr>
-        </tbody>
-      </table>
+                <td colSpan="3">
+                  <button
+                    data-testid="copyButton"
+                    type="button"
+                    className="button"
+                    style={{width: '100%'}}
+                    onClick={() => {
+                      navigator.clipboard.writeText(this.state.result);
+                    }}
+                  >
+                    Copy Result
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </form>
+        <History resultHist={this.state.resultHist} />
+      </div>
     );
   }
 }
