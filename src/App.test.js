@@ -14,8 +14,8 @@ describe('App', () => {
     expect(screen.getByText(')')).toBeInTheDocument();
   });
 
-  test('test add button', () => {
-    const {getByTestId} = render(<App />);
+  test('test add operation', () => {
+    const {getByTestId, container} = render(<App />);
 
     fireEvent.click(getByTestId('button1'));
     expect(getByTestId('input')).toHaveValue('1');
@@ -30,11 +30,12 @@ describe('App', () => {
     expect(getByTestId('input')).toHaveValue('12+7');
 
     fireEvent.click(getByTestId('button='));
-    expect(getByTestId('result')).toHaveValue('19');
+    const result = container.querySelector('#result');
+    expect(result.textContent).toBe('19');
   });
 
-  test('test multiply button', () => {
-    const {getByTestId} = render(<App />);
+  test('test multiply operation', () => {
+    const {getByTestId, container} = render(<App />);
 
     fireEvent.click(getByTestId('button3'));
     expect(getByTestId('input')).toHaveValue('3');
@@ -49,8 +50,8 @@ describe('App', () => {
     expect(getByTestId('input')).toHaveValue('30*1');
 
     fireEvent.click(getByTestId('button='));
-    expect(getByTestId('result')).toHaveValue('30');
-    
+    const result = container.querySelector('#result');
+    expect(result.textContent).toBe('30');
   });
 
   test('test leading zeroes', () => {
@@ -66,25 +67,51 @@ describe('App', () => {
     expect(getByTestId('input')).toHaveValue('1');
   });
 
-  test('test trignometry values', () => {
-    const {getByTestId} = render(<App />);
-
-    fireEvent.click(getByTestId('button9'));
-    expect(getByTestId('input')).toHaveValue('9');
-
-    fireEvent.click(getByTestId('button0'));
-    expect(getByTestId('input')).toHaveValue('90');
+  test('test trignometry values in rad', () => {
+    const {getByTestId, container} = render(<App />);
 
     fireEvent.click(getByTestId('buttonsin'));
+    expect(getByTestId('input')).toHaveValue('sin(');
+
+    fireEvent.click(getByTestId('button9'));
+    expect(getByTestId('input')).toHaveValue('sin(9');
+
+    fireEvent.click(getByTestId('button0'));
+    expect(getByTestId('input')).toHaveValue('sin(90');
+
+    fireEvent.click(getByTestId('button)'));
     expect(getByTestId('input')).toHaveValue('sin(90)');
 
     fireEvent.click(getByTestId('button='));
-    expect(getByTestId('result')).toHaveValue('0.8939966636005579')
+    const result = container.querySelector('#result');
+    expect(result.textContent).toBe('0.89399666');
   });
 
-  test('test impoper values', () => {
-    jest.spyOn(window, 'alert').mockImplementation(() => {});
-    const {getByTestId} = render(<App />);
+  test('test trignometry values in degree', () => {
+    const {getByTestId, container} = render(<App />);
+
+    fireEvent.click(getByTestId('buttonsin'));
+    expect(getByTestId('input')).toHaveValue('sin(');
+
+    fireEvent.click(getByTestId('button9'));
+    expect(getByTestId('input')).toHaveValue('sin(9');
+
+    fireEvent.click(getByTestId('button0'));
+    expect(getByTestId('input')).toHaveValue('sin(90');
+
+    fireEvent.click(getByTestId('deg'));
+    expect(getByTestId('input')).toHaveValue('sin(90deg');
+
+    fireEvent.click(getByTestId('button)'));
+    expect(getByTestId('input')).toHaveValue('sin(90deg)');
+
+    fireEvent.click(getByTestId('button='));
+    const result = container.querySelector('#result');
+    expect(result.textContent).toBe('1');
+  });
+
+  test('test impoper bracket values', () => {
+    const {getByTestId, container} = render(<App />);
 
     fireEvent.click(getByTestId('button8'));
     expect(getByTestId('input')).toHaveValue('8');
@@ -93,12 +120,48 @@ describe('App', () => {
     expect(getByTestId('input')).toHaveValue('8)');
 
     fireEvent.click(getByTestId('button='));
-    expect(window.alert).toHaveBeenCalled();
+    const result = container.querySelector('#result');
+    const error = container.querySelector('#error');
+    expect(result.textContent).toBe('Math Err');
+    expect(error.textContent).toBe('please check brackets');
+  });
 
+  test('test impoper operand values', () => {
+    const {getByTestId, container} = render(<App />);
+
+    fireEvent.click(getByTestId('button8'));
+    expect(getByTestId('input')).toHaveValue('8');
+
+    fireEvent.click(getByTestId('button+'));
+    expect(getByTestId('input')).toHaveValue('8+');
+
+    fireEvent.click(getByTestId('button='));
+    const result = container.querySelector('#result');
+    const error = container.querySelector('#error');
+    expect(result.textContent).toBe('Math Err');
+    expect(error.textContent).toBe('please enter both values of operator');
+  });
+
+  test('test impoper values', () => {
+    const {getByTestId, container} = render(<App />);
+
+    fireEvent.click(getByTestId('button8'));
+    expect(getByTestId('input')).toHaveValue('8');
+
+    fireEvent.click(getByTestId('deg'));
+    expect(getByTestId('input')).toHaveValue('8deg');
+
+    fireEvent.click(getByTestId('button='));
+    const result = container.querySelector('#result');
+    const error = container.querySelector('#error');
+    expect(result.textContent).toBe('Math Err');
+    expect(error.textContent).toBe('please enter proper values');
   });
 
   test('test undo button', () => {
-    const {getByTestId} = render(<App />);
+    const {getByTestId, container} = render(<App />);
+
+    const result = container.querySelector('#result');
 
     fireEvent.click(getByTestId('button8'));
     expect(getByTestId('input')).toHaveValue('8');
@@ -110,13 +173,13 @@ describe('App', () => {
     expect(getByTestId('input')).toHaveValue('8+8');
 
     fireEvent.click(getByTestId('button='));
-    expect(getByTestId('result')).toHaveValue('16');
+    expect(result.textContent).toBe('16');
 
     fireEvent.click(getByTestId('button8'));
     expect(getByTestId('input')).toHaveValue('8+88');
 
     fireEvent.click(getByTestId('buttonundo'));
     expect(getByTestId('input')).toHaveValue('8+8');
-    expect(getByTestId('result')).toHaveValue('0');
+    expect(result.textContent).toBe('0');
   });
 });

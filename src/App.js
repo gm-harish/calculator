@@ -177,6 +177,7 @@ class App extends React.Component {
       <div className="AppContainer">
         <form className="formContainer" name="calculator">
           <div
+            id="result"
             style={this.state.isValueEnabled ? {opacity: 1} : {opacity: 0}}
             className="valueContainer"
           >
@@ -200,6 +201,7 @@ class App extends React.Component {
             }}
           ></input>
           <p
+            id="error"
             style={
               this.state.errorMsg
                 ? {visibility: 'visible'}
@@ -211,9 +213,6 @@ class App extends React.Component {
           </p>
           <table className="table">
             <tbody>
-              {/* <tr>
-              <th colSpan="4"></th>
-            </tr> */}
               {rows.map((row, index) => (
                 <tr key={index}>
                   {row.map((el, i) => (
@@ -233,7 +232,7 @@ class App extends React.Component {
               <tr>
                 <td colSpan="1">
                   <button
-                    data-testid="copyButton"
+                    data-testid="deg"
                     type="button"
                     className="button"
                     style={{width: '100%'}}

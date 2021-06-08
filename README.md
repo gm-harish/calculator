@@ -1,3 +1,7 @@
+# Calculator
+
+You can calculate trignometry values in degrees and radians.You can calculate in degree using sin(45deg) + cos(45deg) To Calculate in readians use sin(45)
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
